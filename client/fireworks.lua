@@ -1,7 +1,4 @@
 local QBCore = exports['qb-core']:GetCoreObject()
-local fireworkTime = 0
-local fireworkLoc = nil
-
 local FireworkList = {
     ["proj_xmas_firework"] = {
         "scr_firework_xmas_ring_burst_rgw",
@@ -51,21 +48,60 @@ local function DrawText3Ds(x, y, z, text)
     ClearDrawOrigin()
 end
 
+function UseFirework(itemName)	
+	QBCore.Functions.Progressbar("spawn_object", "Placing object..", 3000, false, true, {
+        disableMovement = false,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+    }, {
+        animDict = "anim@narcotics@trash",
+        anim = "drop_front",
+        flags = 16,
+    }, {}, {}, function() -- Done
+        StopAnimTask(PlayerPedId(), "anim@narcotics@trash", "drop_front", 1.0)
+        TriggerServerEvent("consumables:server:UseFirework", itemName)
+        TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items[itemName], "remove")
+		return true
+    end, function() -- Cancel
+        StopAnimTask(PlayerPedId(), "anim@narcotics@trash", "drop_front", 1.0)
+        QBCore.Functions.Notify("Canceled..", "error")
+		return false
+    end)
+	return false
+end
+
 local function DoFireWork(asset, coords)
-    fireworkTime = 5
-    fireworkLoc = {x = coords.x, y = coords.y, z = coords.z}
+	fireworkPropObject = nil
+    local fireworkTime = 10
+    local fireworkLoc = {x = coords.x, y = coords.y, z = coords.z}
     CreateThread(function()
+		CreateThread(function()
+			while fireworkTime > 0 and fireworkLoc ~= nil do
+				DrawText3Ds(fireworkLoc.x, fireworkLoc.y, fireworkLoc.z, "Firework over ~r~"..fireworkTime)
+				Wait(0)
+			end
+		end)
+		
         while fireworkTime > 0 do
             Wait(1000)
-            fireworkTime -= 1
+            fireworkTime = fireworkTime - 1
         end
+		
         UseParticleFxAssetNextCall("scr_indep_fireworks")
-        for _ = 1, math.random(5, 10), 1 do
+        for _ = 1, math.random(50, 80), 1 do
             local firework = FireworkList[asset][math.random(1, #FireworkList[asset])]
             UseParticleFxAssetNextCall(asset)
-            StartNetworkedParticleFxNonLoopedAtCoord(firework, fireworkLoc.x, fireworkLoc.y, fireworkLoc.z + 42.5, 0.0, 0.0, 0.0, math.random() * 0.3 + 0.5, false, false, false)
-            Wait(math.random()*500)
+            StartNetworkedParticleFxNonLoopedAtCoord(firework, fireworkLoc.x, fireworkLoc.y, fireworkLoc.z + 42.5, 0.0, 0.0, 0.0, math.random() * 1.5 + 1.8, false, false, false, false)
+			UseParticleFxAssetNextCall(asset)
+            StartNetworkedParticleFxNonLoopedAtCoord(firework, fireworkLoc.x, fireworkLoc.y, fireworkLoc.z + 12.5, 0.0, 0.0, 0.0, math.random() * 1.5 + 1.8, false, false, false, false)
+			UseParticleFxAssetNextCall(asset)
+            StartNetworkedParticleFxNonLoopedAtCoord(firework, fireworkLoc.x, fireworkLoc.y, fireworkLoc.z + 32.5, 0.0, 0.0, 0.0, math.random() * 1.5 + 1.8, false, false, false, false)
+			UseParticleFxAssetNextCall(asset)
+            StartNetworkedParticleFxNonLoopedAtCoord(firework, fireworkLoc.x, fireworkLoc.y, fireworkLoc.z + 22.5, 0.0, 0.0, 0.0, math.random() * 1.5 + 1.8, false, false, false, false)
+			Wait(math.random()*500)
         end
+		fireworkTime = 0
         fireworkLoc = nil
     end)
 end
@@ -99,32 +135,62 @@ CreateThread(function()
             Wait(10)
         end
     end
-    while true do
-        Wait(0)
-        if fireworkTime > 0 and fireworkLoc then
-            DrawText3Ds(fireworkLoc.x, fireworkLoc.y, fireworkLoc.z, "Firework over ~r~"..fireworkTime)
-        end
-    end
 end)
 
 RegisterNetEvent('fireworks:client:UseFirework', function(itemName, assetName)
-    QBCore.Functions.Progressbar("spawn_object", "Placing object..", 3000, false, true, {
-        disableMovement = true,
-        disableCarMovement = true,
-        disableMouse = false,
-        disableCombat = true,
-    }, {
-        animDict = "anim@narcotics@trash",
-        anim = "drop_front",
-        flags = 16,
-    }, {}, {}, function() -- Done
-        StopAnimTask(PlayerPedId(), "anim@narcotics@trash", "drop_front", 1.0)
-        TriggerServerEvent("consumables:server:UseFirework", itemName)
-        TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items[itemName], "remove")
-        local pos = GetEntityCoords(PlayerPedId())
-        DoFireWork(assetName, pos)
-    end, function() -- Cancel
-        StopAnimTask(PlayerPedId(), "anim@narcotics@trash", "drop_front", 1.0)
-        QBCore.Functions.Notify("Canceled..", "error")
-    end)
+    if UseFirework(itemName) then
+		if itemName == 'firework1' then
+			DoFireWork("proj_indep_firework", GetEntityCoords(cache.ped))
+		elseif itemName == 'firework2' then
+			DoFireWork("proj_indep_firework_v2", GetEntityCoords(cache.ped))
+		elseif itemName == 'firework3' then
+			DoFireWork("proj_xmas_firework", GetEntityCoords(cache.ped))
+		elseif itemName == 'firework4' then
+			DoFireWork("scr_indep_fireworks", GetEntityCoords(cache.ped))
+		end
+	end
+end)
+
+exports('firework1', function(data, slot)
+	if UseFirework("ind_prop_firework_01") then
+		exports['ox_inventory']:useItem(data, function(cb)
+			-- The item has been used, so trigger the effects
+			if cb then
+				DoFireWork("proj_indep_firework", GetEntityCoords(cache.ped))
+			end
+		end)
+	end
+end)
+
+exports('firework2', function(data, slot)
+	if UseFirework("ind_prop_firework_02") then
+		exports['ox_inventory']:useItem(data, function(cb)
+			-- The item has been used, so trigger the effects
+			if cb then
+				DoFireWork("proj_indep_firework_v2", GetEntityCoords(cache.ped))
+			end
+		end)
+	end
+end)
+
+exports('firework3', function(data, slot)
+	if UseFirework("ind_prop_firework_03") then
+		exports['ox_inventory']:useItem(data, function(cb)
+			-- The item has been used, so trigger the effects
+			if cb then
+				DoFireWork("proj_xmas_firework", GetEntityCoords(cache.ped))
+			end
+		end)
+	end
+end)
+
+exports('firework4', function(data, slot)
+	if UseFirework("ind_prop_firework_04") then
+		exports['ox_inventory']:useItem(data, function(cb)
+			-- The item has been used, so trigger the effects
+			if cb then
+				DoFireWork("scr_indep_fireworks", GetEntityCoords(cache.ped))
+			end
+		end)
+	end
 end)

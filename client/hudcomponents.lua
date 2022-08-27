@@ -4,7 +4,7 @@ local displayAmmo = true
 
 -- Hud Components: https://docs.fivem.net/natives/?_0x6806C51AD12B83B8
 -- Controls: https://docs.fivem.net/docs/game-references/controls/
-
+--[[
 CreateThread(function()
     while true do
 		for i = 1, #disableHudComponents do
@@ -20,7 +20,7 @@ CreateThread(function()
 		Wait(0)
     end
 end)
-
+]]
 exports('addDisableHudComponents', function(hudComponents)
 	local hudComponentsType = type(hudComponents)
 	if hudComponentsType == 'number' then

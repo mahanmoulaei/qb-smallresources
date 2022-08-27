@@ -1,5 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local washingVehicle = false
+local seat
 
 local function DrawText3Ds(x, y, z, text)
 	SetTextScale(0.35, 0.35)
@@ -36,41 +37,47 @@ RegisterNetEvent('qb-carwash:client:washCar', function()
     end)
 end)
 
-CreateThread(function()
-    local sleep
-    while true do
-        local PlayerPed = PlayerPedId()
-        local PlayerPos = GetEntityCoords(PlayerPed)
-        local PedVehicle = GetVehiclePedIsIn(PlayerPed, false)
-        local Driver = GetPedInVehicleSeat(PedVehicle, -1)
-        local dirtLevel = GetVehicleDirtLevel(PedVehicle)
-        sleep = 1000
-        if IsPedInAnyVehicle(PlayerPed, false) then
-            for k in pairs(Config.CarWash) do
-                local dist = #(PlayerPos - vector3(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"]))
-                if dist <= 7.5 and Driver == PlayerPed then
-                    sleep = 0
-                    if not washingVehicle then
-                        DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], '~g~E~w~ - Washing car ($'..Config.DefaultPrice..')')
-                        if IsControlJustPressed(0, 38) then
-                            if dirtLevel > Config.DirtLevel then
-                                TriggerServerEvent('qb-carwash:server:washCar')
-                            else
-                                QBCore.Functions.Notify("The vehicle isn't dirty", 'error')
-                            end
-                        end
-                    else
-                        DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], 'The car wash is not available ..')
-                    end
-                end
-            end
-        end
-        Wait(sleep)
-    end
+AddEventHandler('qb-smallresources:cache:client:onChange', function(key, value, allCaches)
+	if key == "seat" then
+		seat = value
+		if seat then
+			while seat == -1 do
+				local inRange = false
+				local PlayerPed = PlayerPedId()
+				local PlayerPos = GetEntityCoords(PlayerPed)
+				local PedVehicle = GetVehiclePedIsIn(PlayerPed)
+				local dirtLevel = GetVehicleDirtLevel(PedVehicle)
+				for k in pairs(Config.CarWash) do
+					local dist = #(PlayerPos - vector3(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"]))
+					if dist <= 10 then
+						inRange = true
+						if dist <= 7.5 then
+							if not washingVehicle then
+								DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], '~g~E~w~ - Washing car ($'..Config.DefaultPrice..')')
+								if IsControlJustPressed(0, 38) then
+									if dirtLevel > Config.DirtLevel then
+										TriggerEvent('JLRP-Config:CarWash:Client:WashCar')
+									else
+										QBCore.Functions.Notify("The vehicle isn't dirty...", 'error')
+									end
+								end
+							else
+								DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], 'The car wash is not available ..')
+							end
+						end
+					end
+				end
+				if not inRange then
+					Wait(5000)
+				end
+				Wait(0)
+			end
+		end
+	end
 end)
 
-CreateThread(function()
-    for k in pairs(Config.CarWash) do
+do
+	for k in pairs(Config.CarWash) do
         local carWash = AddBlipForCoord(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"])
         SetBlipSprite (carWash, 100)
         SetBlipDisplay(carWash, 4)
@@ -81,4 +88,4 @@ CreateThread(function()
         AddTextComponentSubstringPlayerName(Config.CarWash[k]["label"])
         EndTextCommandSetBlipName(carWash)
     end
-end)
+end

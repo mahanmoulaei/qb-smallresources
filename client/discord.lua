@@ -22,7 +22,7 @@ CreateThread(function()
         SetDiscordRichPresenceAssetSmallText('This is a lsmall icon with text')
 
         QBCore.Functions.TriggerCallback('smallresources:server:GetCurrentPlayers', function(result)
-            SetRichPresence('Players: '..result..'/64')
+            SetRichPresence('Players: '..result..'/8')
         end)
 
         -- (26-02-2021) New Native:

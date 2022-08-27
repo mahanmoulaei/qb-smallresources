@@ -66,10 +66,13 @@ CreateThread(function()
     while true do
         sleep = 1000
         if IsPedInAnyVehicle(PlayerPedId(), false) then
-            sleep = 0
             if seatbeltOn or harnessOn then
+				sleep = 0
                 DisableControlAction(0, 75, true)
                 DisableControlAction(27, 75, true)
+				if IsDisabledControlJustReleased(0, 75) or IsDisabledControlJustReleased(27, 75) then
+					QBCore.Functions.Notify('You cannot exit the vehicle while you have seatbelt on!', 'error')
+				end
             end
         else
             seatbeltOn = false
@@ -121,9 +124,7 @@ CreateThread(function()
                         elseif (seatbeltOn or harnessOn) and not IsThisModelABike(currentVehicle) then
                             if lastFrameVehiclespeed > 150 then
                                 if math.random(math.ceil(lastFrameVehiclespeed)) > 150 then
-                                    if not harnessOn then
-                                        EjectFromVehicle()
-                                    else
+                                    if harnessOn then
                                         harnessHp -= 1
                                         TriggerServerEvent('seatbelt:DoHarnessDamage', harnessHp, harnessData)
                                     end
@@ -143,9 +144,7 @@ CreateThread(function()
                         elseif (seatbeltOn or harnessOn) and not IsThisModelABike(currentVehicle) then
                             if lastFrameVehiclespeed > 120 then
                                 if math.random(math.ceil(lastFrameVehiclespeed)) > 200 then
-                                    if not harnessOn then
-                                        EjectFromVehicle()
-                                    else
+                                    if harnessOn then
                                         harnessHp -= 1
                                         TriggerServerEvent('seatbelt:DoHarnessDamage', harnessHp, harnessData)
                                     end
@@ -256,13 +255,11 @@ RegisterNetEvent('seatbelt:client:UseHarness', function(ItemData) -- On Item Use
     end
 end)
 
--- Register Key
-
-RegisterCommand('toggleseatbelt', function()
-    if not IsPedInAnyVehicle(PlayerPedId(), false) or IsPauseMenuActive() then return end
-    local class = GetVehicleClass(GetVehiclePedIsUsing(PlayerPedId()))
-    if class == 8 or class == 13 or class == 14 then return end
-    ToggleSeatbelt()
-end, false)
-
-RegisterKeyMapping('toggleseatbelt', 'Toggle Seatbelt', 'keyboard', 'B')
+AddEventHandler("onKeyUp", function(key)
+	if key == "b" then
+		if not IsPedInAnyVehicle(cache.ped, false) or IsPauseMenuActive() then return end
+		local class = GetVehicleClass(GetVehiclePedIsUsing(cache.ped))
+		if class == 8 or class == 13 or class == 14 then return end
+		ToggleSeatbelt()
+	end
+end)
