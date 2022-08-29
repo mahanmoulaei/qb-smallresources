@@ -169,15 +169,18 @@ RegisterNetEvent('JLRP-Config:RoadSigns:Client:StealRoadSign', function(data)
 			AttachEntityToEntity(stopsign, cache.ped, GetPedBoneIndex(cache.ped, 60309),-0.1390, -0.4870, 0.2200, -67.3315314, 145.0627869, -4.4318885,1,1,0,1,0,1)
 			if DoesEntityExist(stopsign) then
 				SetEntityAsMissionEntity(closestObj, 1, 1)
-				Framework.Game.DeleteObject(closestObj, function(response)
-					if not response or response == nil then
-						SetEntityCoords(closestObj, -1000.0, -1000.0, -1000.0)
-					end
-				end)
+				-- Framework.Game.DeleteObject(closestObj, function(response)
+					-- if not response or response == nil then
+						-- SetEntityCoords(closestObj, -1000.0, -1000.0, -1000.0)
+					-- end
+				-- end)
+				DeleteEntity(closestObj)
+				SetEntityCoords(closestObj, -1000.0, -1000.0, -1000.0)
 				SetEntityAsNoLongerNeeded(closestObj)
 			end
 			while stopsign ~= nil and DoesEntityExist(stopsign) and IsEntityAttachedToEntity(cache.ped, stopsign) and not QBCore.PlayerData.metadata['isdead'] and not QBCore.PlayerData.metadata['inlaststand'] and not QBCore.PlayerData.metadata['ishandcuffed'] do
-				QBCore.Functions.DrawText3D(GetPedBoneCoords(cache.ped, 60309), "Press \"~g~G~s~\" to drop the stop sign youre holding")
+				local coordsToShow = GetPedBoneCoords(cache.ped, 60309)
+				QBCore.Functions.DrawText3D(coordsToShow.x, coordsToShow.y, coordsToShow.z, "Press \"~g~G~s~\" to drop the stop sign youre holding")
 				if IsControlJustReleased(0, 58) then
 					DetachSign(stopsign)
 					break

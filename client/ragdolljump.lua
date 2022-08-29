@@ -1,3 +1,4 @@
+local QBCore = exports['qb-core']:GetCoreObject()
 local TackleKey = 51 -- Change to a number which can be found here: https://wiki.fivem.net/wiki/Controls -> E
 local TackleTime = 2000 -- In milliseconds
 local timeToWaitBeforeShakeScreen = 300 -- In miliseconds
@@ -42,7 +43,7 @@ AddEventHandler("onMultipleKeyPress", function(keys)
 			isLoopActive = true
 			local ForwardVector = GetEntityForwardVector(cache.ped)
 			local Tackled = {}
-
+			--QBCore.Functions.Notify(ForwardVector.x..' '..ForwardVector.y..' '..ForwardVector.z, "error")
 			SetPedToRagdollWithFall(cache.ped, TackleTime - 500, TackleTime, 0, ForwardVector, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 			Wait(timeToWaitBeforeShakeScreen)
 			ShakeGameplayCam('SMALL_EXPLOSION_SHAKE', explosionStrength) -- change this float to increase/decrease camera shake

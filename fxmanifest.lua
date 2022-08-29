@@ -1,5 +1,7 @@
 fx_version 'cerulean'
 game 'gta5'
+lua54 'yes'
+use_experimental_fxv2_oal 'yes'
 
 description 'QB-SmallResources'
 version '1.1.0'
@@ -17,9 +19,6 @@ files {
 	'popgroups.ymt',
 	'relationships.dat'
 }
-
-lua54 'yes'
-use_experimental_fxv2_oal 'yes'
 
 dependencies {
 	'qb-target',
